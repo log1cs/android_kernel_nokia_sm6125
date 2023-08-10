@@ -39,6 +39,9 @@
 #include <asm/byteorder.h>
 #include <uapi/linux/fs.h>
 
+//@{ Lct.DamonHuang,20191205,add for CAP-764 bigen.
+#define DATA_PARTITION_PROTECT_ENABLE 1
+//@} end.
 struct backing_dev_info;
 struct bdi_writeback;
 struct bio;

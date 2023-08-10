@@ -881,6 +881,13 @@ static int qusb_phy_dpdm_regulator_enable(struct regulator_dev *rdev)
 	dev_dbg(qphy->phy.dev, "%s dpdm_enable:%d\n",
 				__func__, qphy->dpdm_enable);
 
+	/*Add by xukai. For CAP-691. 20191224*/
+	 if (qphy->phy.flags & PHY_HOST_MODE) {
+		dev_err(qphy->phy.dev, "%s: host mode active\n", __func__);
+		return -EINVAL;
+	 }
+	/*Add by xukai. For CAP-691. 20191224*/
+
 	mutex_lock(&qphy->phy_lock);
 	if (!qphy->dpdm_enable) {
 		ret = qusb_phy_enable_power(qphy, true);

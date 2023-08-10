@@ -57,7 +57,7 @@
 
 #define MTP_RX_BUFFER_INIT_SIZE    1048576
 #define MTP_TX_BUFFER_INIT_SIZE    1048576
-#define MTP_BULK_BUFFER_SIZE       16384
+#define MTP_BULK_BUFFER_SIZE       32768  //Modify by xukai. CAP-2404. 20200106.
 #define INTR_BUFFER_SIZE           28
 #define MAX_INST_NAME_LEN          40
 #define MTP_MAX_FILE_SIZE          0xFFFFFFFFL
@@ -149,7 +149,7 @@ struct mtp_dev {
 	} perf[MAX_ITERATION];
 	unsigned int dbg_read_index;
 	unsigned int dbg_write_index;
-	struct mutex  read_mutex;
+	//struct mutex  read_mutex; //Modify by xukai. 20200306
 };
 
 static void *_mtp_ipc_log;
@@ -646,7 +646,7 @@ static ssize_t mtp_read(struct file *fp, char __user *buf,
 	dev->state = STATE_BUSY;
 	spin_unlock_irq(&dev->lock);
 
-	mutex_lock(&dev->read_mutex);
+	//mutex_lock(&dev->read_mutex); //Modify by xukai. 20200306
 	if (dev->state == STATE_OFFLINE) {
 		r = -EIO;
 		goto done;
@@ -947,6 +947,10 @@ static void receive_file_work(struct work_struct *data)
 	}
 	while (count > 0 || write_req) {
 		if (count > 0) {
+			if (dev->state == STATE_OFFLINE) {
+				r = -EIO;
+				break;
+			}
 			/* queue a request */
 			read_req = dev->rx_req[cur_buf];
 			cur_buf = (cur_buf + 1) % RX_REQ_MAX;
@@ -967,6 +971,10 @@ static void receive_file_work(struct work_struct *data)
 		if (write_req) {
 			mtp_log("rx %pK %d\n", write_req, write_req->actual);
 			start_time = ktime_get();
+			if (dev->state == STATE_OFFLINE) {
+				r = -EIO;
+				break;
+			}
 			ret = vfs_write(filp, write_req->buf, write_req->actual,
 				&offset);
 			mtp_log("vfs_write %d\n", ret);
@@ -1002,6 +1010,12 @@ static void receive_file_work(struct work_struct *data)
 			}
 			if (read_req->status) {
 				r = read_req->status;
+				break;
+			}
+
+			if (dev->state == STATE_OFFLINE) {
+				r = -EIO;
+				//mutex_unlock(&dev->read_mutex); //Modify by xukai. 20200306
 				break;
 			}
 
@@ -1478,8 +1492,6 @@ mtp_function_unbind(struct usb_configuration *c, struct usb_function *f)
 	fi_mtp = container_of(f->fi, struct mtp_instance, func_inst);
 	mtp_string_defs[INTERFACE_STRING_INDEX].id = 0;
 	mtp_log("dev: %pK\n", dev);
-
-	mutex_lock(&dev->read_mutex);
 	while ((req = mtp_req_get(dev, &dev->tx_idle)))
 		mtp_request_free(req, dev->ep_in);
 	for (i = 0; i < RX_REQ_MAX; i++)
@@ -1831,7 +1843,7 @@ struct usb_function_instance *alloc_inst_mtp_ptp(bool mtp_config)
 	usb_os_desc_prepare_interf_dir(&fi_mtp->func_inst.group, 1,
 					descs, names, THIS_MODULE);
 
-	mutex_init(&fi_mtp->dev->read_mutex);
+	//mutex_init(&fi_mtp->dev->read_mutex); //Modify by xukai. 20200306
 
 	return  &fi_mtp->func_inst;
 }
