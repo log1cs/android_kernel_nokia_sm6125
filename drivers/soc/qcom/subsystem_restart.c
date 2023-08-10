@@ -1262,6 +1262,9 @@ int subsystem_restart_dev(struct subsys_device *dev)
 		return -EBUSY;
 	}
 
+	/*add by qinfeng for vts && dump for pr1.0 NHK_M528_A01-31*/
+	dev->restart_level = 1 ;
+	/*NHK_M528_A01-31 end*/
 	pr_info("Restart sequence requested for %s, restart_level = %s.\n",
 		name, restart_levels[dev->restart_level]);
 

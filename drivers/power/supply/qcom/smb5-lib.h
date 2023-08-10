@@ -98,11 +98,15 @@ enum print_reason {
 
 #define SDP_100_MA			100000
 #define SDP_CURRENT_UA			500000
-#define CDP_CURRENT_UA			1500000
-#define DCP_CURRENT_UA			1500000
+/*Modify by xukai. 20191031. start*/
+#define CDP_CURRENT_UA			2000000
+#define DCP_CURRENT_UA			2000000
+/*Modify by xukai. 20191031. end*/
 #define HVDCP_CURRENT_UA		3000000
 #define TYPEC_DEFAULT_CURRENT_UA	900000
-#define TYPEC_MEDIUM_CURRENT_UA		1500000
+/*Modify by xukai. 20191031. start*/
+#define TYPEC_MEDIUM_CURRENT_UA		2000000
+/*Modify by xukai. 20191031. end*/
 #define TYPEC_HIGH_CURRENT_UA		3000000
 #define DCIN_ICL_MIN_UA			100000
 #define DCIN_ICL_MAX_UA			1500000
@@ -813,4 +817,10 @@ int smblib_get_qc3_main_icl_offset(struct smb_charger *chg, int *offset_ua);
 
 int smblib_init(struct smb_charger *chg);
 int smblib_deinit(struct smb_charger *chg);
+/*Add by xukai. 20191212. start*/
+int smblib_set_prop_battery_charging_enabled(struct smb_charger *chg,
+                const union power_supply_propval *val);
+int smblib_get_prop_battery_charging_enabled(struct smb_charger *chg,
+                union power_supply_propval *val);
+/*Add by xukai. 20191212. end*/
 #endif /* __SMB5_CHARGER_H */

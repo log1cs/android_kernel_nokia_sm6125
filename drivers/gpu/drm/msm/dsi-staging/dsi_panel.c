@@ -24,6 +24,8 @@
 #include "dsi_ctrl_hw.h"
 #include "dsi_parser.h"
 
+char g_lcd_id[128];
+
 /**
  * topology is currently defined by a set of following 3 values:
  * 1. num of layer mixers
@@ -471,6 +473,9 @@ exit:
 	return rc;
 }
 
+#ifdef CONFIG_TOUCHSCREEN_COMMON_INIT
+extern bool (*lcd_reset_keep_high)(void);
+#endif
 static int dsi_panel_power_off(struct dsi_panel *panel)
 {
 	int rc = 0;
@@ -478,8 +483,13 @@ static int dsi_panel_power_off(struct dsi_panel *panel)
 	if (gpio_is_valid(panel->reset_config.disp_en_gpio))
 		gpio_set_value(panel->reset_config.disp_en_gpio, 0);
 
-	if (gpio_is_valid(panel->reset_config.reset_gpio))
-		gpio_set_value(panel->reset_config.reset_gpio, 0);
+	if (gpio_is_valid(panel->reset_config.reset_gpio)) {
+#ifdef CONFIG_TOUCHSCREEN_COMMON_INIT        
+        if(NULL != lcd_reset_keep_high)
+			if (!lcd_reset_keep_high())
+#endif
+			gpio_set_value(panel->reset_config.reset_gpio, 0);
+	}
 
 	if (gpio_is_valid(panel->reset_config.lcd_mode_sel_gpio))
 		gpio_set_value(panel->reset_config.lcd_mode_sel_gpio, 0);
@@ -678,6 +688,10 @@ error:
 	return rc;
 }
 
+#ifdef CONFIG_LCD_I2C_BACKLIGHT
+extern int dsi_panel_update_ext_backlight(int brightness);
+#endif
+
 int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 {
 	int rc = 0;
@@ -695,9 +709,17 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 		rc = dsi_panel_update_backlight(panel, bl_lvl);
 		break;
 	case DSI_BACKLIGHT_EXTERNAL:
+#ifdef CONFIG_LCD_I2C_BACKLIGHT
+		rc = dsi_panel_update_ext_backlight(bl_lvl);
+#endif
 		break;
 	case DSI_BACKLIGHT_PWM:
+#ifdef CONFIG_LCD_I2C_BACKLIGHT
+		rc = dsi_panel_update_pwm_backlight(panel, bl_lvl?bl->bl_max_level:0);
+		rc = dsi_panel_update_ext_backlight(bl_lvl);
+#else
 		rc = dsi_panel_update_pwm_backlight(panel, bl_lvl);
+#endif
 		break;
 	default:
 		pr_err("Backlight type(%d) not supported\n", bl->type);
@@ -3196,6 +3218,35 @@ end:
 	utils->node = panel->panel_of_node;
 }
 
+
+static ssize_t msm_fb_lcd_name(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+   ssize_t ret = 0;
+   sprintf(buf, "%s\n", g_lcd_id);
+   ret = strlen(buf) + 1;
+   return ret;
+}
+
+static DEVICE_ATTR(lcd_name,0444,msm_fb_lcd_name,NULL);
+static struct kobject *msm_lcd_name;
+static int msm_lcd_name_create_sysfs(void){
+   int ret;
+   msm_lcd_name=kobject_create_and_add("android_lcd",NULL);
+
+   if(msm_lcd_name==NULL){
+     pr_info("msm_lcd_name_create_sysfs_ failed\n");
+     ret=-ENOMEM;
+     return ret;
+   }
+   ret=sysfs_create_file(msm_lcd_name,&dev_attr_lcd_name.attr);
+   if(ret){
+    pr_info("%s failed \n",__func__);
+    kobject_del(msm_lcd_name);
+   }
+   return 0;
+}
+
 struct dsi_panel *dsi_panel_get(struct device *parent,
 				struct device_node *of_node,
 				struct device_node *parser_node,
@@ -3231,6 +3282,9 @@ struct dsi_panel *dsi_panel_get(struct device *parent,
 				"qcom,mdss-dsi-panel-physical-type", NULL);
 	if (panel_physical_type && !strcmp(panel_physical_type, "oled"))
 		panel->panel_type = DSI_DISPLAY_PANEL_TYPE_OLED;
+
+	strcpy(g_lcd_id,panel->name);
+	msm_lcd_name_create_sysfs();
 
 	rc = dsi_panel_parse_host_config(panel);
 	if (rc) {

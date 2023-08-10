@@ -1369,10 +1369,18 @@ int smblib_set_icl_current(struct smb_charger *chg, int icl_ua)
 	/* suspend if 25mA or less is requested */
 	bool suspend = (icl_ua <= USBIN_25MA);
 
-	/* Do not configure ICL from SW for DAM cables */
-	if (smblib_get_prop_typec_mode(chg) ==
-			    POWER_SUPPLY_TYPEC_SINK_DEBUG_ACCESSORY)
-		return 0;
+	/*Add by xukai. for CAP-3445. Support HUAWEI USB. start*/
+	if (chg->connector_type == POWER_SUPPLY_CONNECTOR_TYPEC) {
+		rc = smblib_masked_write(chg, USB_CMD_PULLDOWN_REG,
+				EN_PULLDOWN_USB_IN_BIT,
+				suspend ? 0 : EN_PULLDOWN_USB_IN_BIT);
+		if (rc < 0) {
+			smblib_err(chg, "Couldn't write %s to EN_PULLDOWN_USB_IN_BIT rc=%d\n",
+				suspend ? "disable" : "enable", rc);
+			goto out;
+		}
+	}
+	/*Add by xukai. for CAP-3445. Support HUAWEI USB. end*/
 
 	if (suspend)
 		return smblib_set_usb_suspend(chg, true);
@@ -2222,6 +2230,27 @@ int smblib_get_prop_batt_charge_done(struct smb_charger *chg,
 	return 0;
 }
 
+/*Add by xukai. 20191212. start*/
+int smblib_get_prop_battery_charging_enabled(struct smb_charger *chg,
+                union power_supply_propval *val)
+{
+       int rc;
+       u8 reg;
+
+       rc = smblib_read(chg, CHARGING_ENABLE_CMD_REG, &reg);
+       if (rc < 0) {
+               smblib_err(chg,
+                       "Couldn't read battery CHARGING_ENABLE_CMD rc=%d\n",
+                       rc);
+               return rc;
+       }
+
+       reg = reg & CHARGING_ENABLE_CMD_BIT;
+       val->intval = (reg == CHARGING_ENABLE_CMD_BIT);
+       return 0;
+}
+/*Add by xukai. 20191212. end*/
+
 /***********************
  * BATTERY PSY SETTERS *
  ***********************/
@@ -2249,6 +2278,69 @@ int smblib_set_prop_input_suspend(struct smb_charger *chg,
 	power_supply_changed(chg->batt_psy);
 	return rc;
 }
+
+/*Add by xukai. 20191212. start*/
+extern void smb_charging_ctl(int val);
+#define SMB_CHARGING_ENABLE 1
+#define SMB_CHARGING_DISABLE 0
+int smblib_set_prop_battery_charging_enabled(struct smb_charger *chg,
+                const union power_supply_propval *val)
+{
+       int rc;
+
+       printk(KERN_CRIT "-------->>%s--------->>\n", __func__);
+       smblib_dbg(chg, PR_MISC, "%s intval= %x\n",__FUNCTION__,val->intval);
+
+       if (1 == val->intval) {
+		/*
+               rc = smblib_masked_write(chg, CHARGING_ENABLE_CMD_REG,
+                       CHARGING_ENABLE_CMD_BIT,CHARGING_ENABLE_CMD_BIT);
+               if (rc < 0) {
+                       smblib_err(chg, "--------> SMB couldn't enable charging, rc=%d\n",
+                                               rc);
+                       return rc;
+               }
+       	       printk(KERN_CRIT "-------->>%s--------->> enable charge\n", __func__);
+		*/
+		smb_charging_ctl(SMB_CHARGING_ENABLE);
+       }
+       else if (0 == val->intval) {
+		/*
+               rc = smblib_masked_write(chg, CHARGING_ENABLE_CMD_REG,
+                       CHARGING_ENABLE_CMD_BIT,0);
+               if (rc < 0) {
+                       smblib_err(chg, "-------->SMB couldn't disable charging, rc=%d\n",
+                                               rc);
+                       return rc;
+               }
+       	       printk(KERN_CRIT "-------->>%s--------->> disable charge\n", __func__);
+		*/
+	       smb_charging_ctl(SMB_CHARGING_DISABLE);
+       } else if (2 == val->intval) {
+	       rc = smblib_masked_write(chg, CHARGING_ENABLE_CMD_REG,
+                       CHARGING_ENABLE_CMD_BIT,CHARGING_ENABLE_CMD_BIT);
+               if (rc < 0) {
+                       smblib_err(chg, "--------> SMB couldn't enable charging, rc=%d\n",
+                                               rc);
+                       return rc;
+               }
+               printk(KERN_CRIT "-------->>%s--------->> enable charge\n", __func__);
+       } else if (3 == val->intval) {
+	       rc = smblib_masked_write(chg, CHARGING_ENABLE_CMD_REG,
+                       CHARGING_ENABLE_CMD_BIT,0);
+               if (rc < 0) {
+                       smblib_err(chg, "-------->SMB couldn't disable charging, rc=%d\n",
+                                               rc);
+                       return rc;
+               }
+               printk(KERN_CRIT "-------->>%s--------->> disable charge\n", __func__);
+       }
+       else
+               smblib_err(chg, "Couldn't disable charging rc=%d\n",rc);
+
+       return 0;
+}
+/*Add by xukai. 20191212. end*/
 
 int smblib_set_prop_batt_capacity(struct smb_charger *chg,
 				  const union power_supply_propval *val)
@@ -3423,6 +3515,7 @@ int smblib_get_prop_charger_temp(struct smb_charger *chg,
 	return rc;
 }
 
+extern int typecStatus;//Add by xukai. 20200102
 int smblib_get_prop_typec_cc_orientation(struct smb_charger *chg,
 					 union power_supply_propval *val)
 {
@@ -3440,6 +3533,19 @@ int smblib_get_prop_typec_cc_orientation(struct smb_charger *chg,
 		val->intval = (bool)(stat & CC_ORIENTATION_BIT) + 1;
 	else
 		val->intval = 0;
+	//Add by xukai. 20200102.
+	switch(stat){
+		case 41:
+			typecStatus = 2;
+		break;
+		case 43:
+			typecStatus = 3;
+		break;
+		default:
+		break;
+	}
+	//printk(KERN_CRIT "<----------%s----stat = %d, typecStatus = %d--------->\n", __func__, stat, typecStatus);
+	//Add by xukai. 20200102.
 
 	return rc;
 }
@@ -5604,6 +5710,7 @@ static void typec_sink_insertion(struct smb_charger *chg)
 	if (rc < 0)
 		dev_err(chg->dev, "Error in setting freq_boost rc=%d\n", rc);
 
+	printk("%s, xiewei test usb in", __func__);
 	if (chg->use_extcon) {
 		smblib_notify_usb_host(chg, true);
 		chg->otg_present = true;
@@ -5614,6 +5721,15 @@ static void typec_sink_insertion(struct smb_charger *chg)
 					&& !chg->pd_not_supported;
 }
 
+#ifdef CONFIG_TOUCHSCREEN_USB_CHECK
+typedef void (*UpdateUsbState)(bool plugin);
+UpdateUsbState touchscreen_update = NULL;
+void touchscreen_update_state_regist(UpdateUsbState pfunc){
+	touchscreen_update = pfunc;
+}
+EXPORT_SYMBOL_GPL(touchscreen_update_state_regist);
+#endif
+
 static void typec_src_insertion(struct smb_charger *chg)
 {
 	int rc = 0;
@@ -5623,6 +5739,10 @@ static void typec_src_insertion(struct smb_charger *chg)
 		vote(chg->usb_icl_votable, SW_ICL_MAX_VOTER, false, 0);
 		return;
 	}
+
+#ifdef CONFIG_TOUCHSCREEN_USB_CHECK
+		if(!IS_ERR_OR_NULL(touchscreen_update)){touchscreen_update(true);}
+#endif
 
 	rc = smblib_read(chg, LEGACY_CABLE_STATUS_REG, &stat);
 	if (rc < 0) {
@@ -5642,6 +5762,9 @@ static void typec_src_insertion(struct smb_charger *chg)
 
 static void typec_ra_ra_insertion(struct smb_charger *chg)
 {
+#ifdef CONFIG_TOUCHSCREEN_USB_CHECK
+	if(!IS_ERR_OR_NULL(touchscreen_update)){touchscreen_update(true);}
+#endif
 	vote(chg->usb_icl_votable, SW_ICL_MAX_VOTER, true, 500000);
 	vote(chg->usb_icl_votable, USB_PSY_VOTER, false, 0);
 	chg->ok_to_pd = false;
@@ -5671,6 +5794,10 @@ static void typec_src_removal(struct smb_charger *chg)
 	struct smb_irq_data *data;
 	struct storm_watch *wdata;
 	int sec_charger;
+
+#ifdef CONFIG_TOUCHSCREEN_USB_CHECK
+	if(!IS_ERR_OR_NULL(touchscreen_update)){touchscreen_update(false);}
+#endif
 
 	sec_charger = chg->sec_pl_present ? POWER_SUPPLY_CHARGER_SEC_PL :
 				POWER_SUPPLY_CHARGER_SEC_NONE;
@@ -5922,6 +6049,10 @@ irqreturn_t typec_state_change_irq_handler(int irq, void *data)
 
 	smblib_dbg(chg, PR_INTERRUPT, "IRQ: cc-state-change; Type-C %s detected\n",
 				smblib_typec_mode_name[chg->typec_mode]);
+
+	//Add by xukai. 20200102.
+	//printk(KERN_CRIT  "IRQ: cc-state-change; Type-C %s detected\n",
+				//smblib_typec_mode_name[chg->typec_mode]);
 
 	power_supply_changed(chg->usb_psy);
 	if (chg->dual_role)

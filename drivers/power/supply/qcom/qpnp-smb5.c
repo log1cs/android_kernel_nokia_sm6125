@@ -1579,6 +1579,8 @@ static enum power_supply_property smb5_batt_props[] = {
 	POWER_SUPPLY_PROP_CHARGE_FULL,
 	POWER_SUPPLY_PROP_FORCE_RECHARGE,
 	POWER_SUPPLY_PROP_FCC_STEPPER_ENABLE,
+	POWER_SUPPLY_PROP_CHARGING_ENABLED,//Add by xukai. 20191212.
+	POWER_SUPPLY_PROP_SYSTEM_TEMP_LEVEL,//Add by xukai. 20200101
 };
 
 #define DEBUG_ACCESSORY_TEMP_DECIDEGC	250
@@ -1588,6 +1590,7 @@ static int smb5_batt_get_prop(struct power_supply *psy,
 {
 	struct smb_charger *chg = power_supply_get_drvdata(psy);
 	int rc = 0;
+
 
 	switch (psp) {
 	case POWER_SUPPLY_PROP_STATUS:
@@ -1644,8 +1647,10 @@ static int smb5_batt_get_prop(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_CURRENT_NOW:
 		rc = smblib_get_prop_from_bms(chg,
 				POWER_SUPPLY_PROP_CURRENT_NOW, val);
+		/* Add by xukai. 20191214.
 		if (!rc)
 			val->intval *= (-1);
+		*/
 		break;
 	case POWER_SUPPLY_PROP_CURRENT_QNOVO:
 		val->intval = get_client_vote_locked(chg->fcc_votable,
@@ -1718,6 +1723,15 @@ static int smb5_batt_get_prop(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_FCC_STEPPER_ENABLE:
 		val->intval = chg->fcc_stepper_enable;
 		break;
+	/*Add by xukai. 20191212. start*/
+	case POWER_SUPPLY_PROP_CHARGING_ENABLED:
+                rc = smblib_get_prop_battery_charging_enabled(chg, val);
+                break;
+	/*Add by xukai. 20191212. end*/
+	/*Add by xukai. 20200101. start*/
+	case POWER_SUPPLY_PROP_SYSTEM_TEMP_LEVEL:
+                rc = smblib_get_prop_system_temp_level(chg, val);
+	/*Add by xukai. 20200101. end*/
 	default:
 		pr_err("batt power supply prop %d not supported\n", psp);
 		return -EINVAL;
@@ -1819,6 +1833,15 @@ static int smb5_batt_set_prop(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_FCC_STEPPER_ENABLE:
 		chg->fcc_stepper_enable = val->intval;
 		break;
+	/*Add by xukai. 20191212. start*/
+	case POWER_SUPPLY_PROP_CHARGING_ENABLED:
+                rc = smblib_set_prop_battery_charging_enabled(chg, val);
+                break;
+	/*Add by xukai. 20191212. end*/
+	/*Add by xukai. 20200101. start*/
+        case POWER_SUPPLY_PROP_SYSTEM_TEMP_LEVEL:
+		rc = smblib_set_prop_system_temp_level(chg, val);
+        /*Add by xukai. 20200101. end*/
 	default:
 		rc = -EINVAL;
 	}
@@ -1840,6 +1863,7 @@ static int smb5_batt_prop_is_writeable(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_INPUT_CURRENT_LIMITED:
 	case POWER_SUPPLY_PROP_STEP_CHARGING_ENABLED:
 	case POWER_SUPPLY_PROP_DIE_HEALTH:
+        case POWER_SUPPLY_PROP_CHARGING_ENABLED://Add by xukai. 20191212.
 		return 1;
 	default:
 		break;
@@ -2294,6 +2318,10 @@ static int smb5_configure_typec(struct smb_charger *chg)
 	if (rc < 0)
 		dev_err(chg->dev,
 			"Couldn't configure CC threshold voltage rc=%d\n", rc);
+	/*Add by xukai. For CAP-2072. 20200106. start*/
+	rc = smblib_masked_write(chg, 0x1358, 0x80, 0);
+        rc = smblib_masked_write(chg, 0x154a, 0x07, 0x07);
+	/*Add by xukai. For CAP-2072. 20200106. end*/
 
 	return rc;
 }

@@ -85,5 +85,10 @@ obj-$(CONFIG_LEDS_DAC124S085)		+= leds-dac124s085.o
 # LED Userspace Drivers
 obj-$(CONFIG_LEDS_USER)			+= uleds.o
 
+obj-$(CONFIG_LCD_I2C_BACKLIGHT)	+= lcd_i2c_backlight.o
+obj-$(CONFIG_BACKLIGHT_KTD3136)	+= ktd3137_bl.o
+obj-$(CONFIG_BACKLIGHT_LM3697)	+= lm3697_bl.o
+obj-$(CONFIG_BACKLIGHT_AW99703)	+= aw99703_bl.o
+
 # LED Triggers
 obj-$(CONFIG_LEDS_TRIGGERS)		+= trigger/

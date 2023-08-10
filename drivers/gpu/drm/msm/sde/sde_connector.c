@@ -434,6 +434,7 @@ void sde_connector_schedule_status_work(struct drm_connector *connector,
 		return;
 
 	sde_connector_get_info(connector, &info);
+	c_conn->status_err_count = 0;
 	if (c_conn->ops.check_status &&
 		(info.capabilities & MSM_DISPLAY_ESD_ENABLED)) {
 		if (en) {
@@ -1977,8 +1978,15 @@ static void sde_connector_check_status_work(struct work_struct *work)
 	rc = conn->ops.check_status(&conn->base, conn->display, false);
 	mutex_unlock(&conn->lock);
 
-	if (rc > 0) {
+	if ((rc > 0) || (conn->status_err_count < STATUS_ERR_MAX_COUNT)) {
 		u32 interval;
+
+		if(rc <= 0){
+			conn->status_err_count++;
+		}
+		else{
+			conn->status_err_count = 0;
+		}
 
 		SDE_DEBUG("esd check status success conn_id: %d enc_id: %d\n",
 				conn->base.base.id, conn->encoder->base.id);
@@ -1992,6 +2000,7 @@ static void sde_connector_check_status_work(struct work_struct *work)
 	}
 
 	_sde_connector_report_panel_dead(conn, false);
+
 }
 
 static const struct drm_connector_helper_funcs sde_connector_helper_ops = {
