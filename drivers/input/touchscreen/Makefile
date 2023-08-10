@@ -5,6 +5,16 @@
 
 # Each configuration option enables a list of files.
 
+# HMI_M516_A01
+obj-$(CONFIG_TOUCHSCREEN_PROCFILE) += lct_tp_info.o
+obj-$(CONFIG_TOUCHSCREEN_PROCFILE) += lct_tp_selftest.o
+obj-$(CONFIG_TOUCHSCREEN_PROCFILE) += lct_tp_gesture.o
+obj-$(CONFIG_TOUCHSCREEN_PROCFILE) += lct_tp_grip_area.o
+obj-$(CONFIG_TOUCHSCREEN_PROCFILE) += lct_tp_work.o
+obj-$(CONFIG_TOUCHSCREEN_NT36xxx_HOSTDL_SPI) += nt36xxx_spi/
+obj-$(CONFIG_TOUCHSCREEN_ILI9881X_HOSTDL_SPI) += ili9881x_spi/
+obj-$(CONFIG_TOUCHSCREEN_COMMON_INIT)	+= touchscreen_common_init.o
+
 wm97xx-ts-y := wm97xx-core.o
 
 obj-$(CONFIG_TOUCHSCREEN_PROPERTIES)	+= of_touchscreen.o

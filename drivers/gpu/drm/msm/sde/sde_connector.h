@@ -430,6 +430,7 @@ struct sde_connector {
 	struct backlight_device *bl_device;
 	struct delayed_work status_work;
 	u32 esd_status_interval;
+	int status_err_count;
 	bool panel_dead;
 	bool esd_status_check;
 
