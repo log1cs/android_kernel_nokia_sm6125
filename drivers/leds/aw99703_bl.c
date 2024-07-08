@@ -61,7 +61,7 @@ static int aw99703_i2c_write_bit(struct i2c_client *client,
 	return 0;
 }
 
-static int aw99703_bl_enable_channel()
+static int aw99703_bl_enable_channel(void)
 {
 	int ret = 0;
 
@@ -93,7 +93,7 @@ static int aw99703_bl_enable_channel()
 	return ret;
 }
 
-static void aw99703_pwm_mode_enable()
+static void aw99703_pwm_mode_enable(void)
 {
 	if (drvdata.pwm_mode) {
 		aw99703_i2c_write_bit(drvdata.client,
@@ -108,7 +108,7 @@ static void aw99703_pwm_mode_enable()
 	}
 }
 
-static void aw99703_ramp_setting()
+static void aw99703_ramp_setting(void)
 {
 	aw99703_i2c_write_bit(drvdata.client,
 				AW99703_REG_TURNCFG,
@@ -120,7 +120,7 @@ static void aw99703_ramp_setting()
 				AW99703_TURNCFG_OFF_TIM_MASK,
 				drvdata.ramp_off_time);
 }
-static void aw99703_transition_ramp()
+static void aw99703_transition_ramp(void)
 {
 	aw99703_i2c_write_bit(drvdata.client,
 				AW99703_REG_TRANCFG,
@@ -133,7 +133,7 @@ static void aw99703_transition_ramp()
 				drvdata.i2c_trans_dim);
 }
 
-static int aw99703_backlight_init()
+static int aw99703_backlight_init(void)
 {
 	aw99703_pwm_mode_enable();
 
@@ -180,7 +180,7 @@ static int aw99703_backlight_init()
 	return 0;
 }
 
-static int aw99703_backlight_enable()
+static int aw99703_backlight_enable(void)
 {
 	aw99703_i2c_write_bit(drvdata.client, AW99703_REG_MODE, AW99703_MODE_WORKMODE_MASK, AW99703_MODE_WORKMODE_BACKLIGHT);
 
