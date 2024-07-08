@@ -149,7 +149,7 @@ struct mtp_dev {
 	} perf[MAX_ITERATION];
 	unsigned int dbg_read_index;
 	unsigned int dbg_write_index;
-	//struct mutex  read_mutex; //Modify by xukai. 20200306
+
 };
 
 static void *_mtp_ipc_log;
@@ -646,7 +646,6 @@ static ssize_t mtp_read(struct file *fp, char __user *buf,
 	dev->state = STATE_BUSY;
 	spin_unlock_irq(&dev->lock);
 
-	//mutex_lock(&dev->read_mutex); //Modify by xukai. 20200306
 	if (dev->state == STATE_OFFLINE) {
 		r = -EIO;
 		goto done;
@@ -695,7 +694,7 @@ requeue_req:
 		r = -EIO;
 
 done:
-	mutex_unlock(&dev->read_mutex);
+	// Do nothing
 wait_err:
 	spin_lock_irq(&dev->lock);
 	if (dev->state == STATE_CANCELED)
@@ -940,7 +939,6 @@ static void receive_file_work(struct work_struct *data)
 	if (!IS_ALIGNED(count, dev->ep_out->maxpacket))
 		mtp_log("- count(%lld) not multiple of mtu(%d)\n",
 						count, dev->ep_out->maxpacket);
-	mutex_lock(&dev->read_mutex);
 	if (dev->state == STATE_OFFLINE) {
 		r = -EIO;
 		goto fail;
@@ -1015,7 +1013,6 @@ static void receive_file_work(struct work_struct *data)
 
 			if (dev->state == STATE_OFFLINE) {
 				r = -EIO;
-				//mutex_unlock(&dev->read_mutex); //Modify by xukai. 20200306
 				break;
 			}
 
@@ -1042,7 +1039,6 @@ static void receive_file_work(struct work_struct *data)
 		}
 	}
 fail:
-	mutex_unlock(&dev->read_mutex);
 	mtp_log("returning %d\n", r);
 	/* write the result */
 	dev->xfer_result = r;
@@ -1502,7 +1498,6 @@ mtp_function_unbind(struct usb_configuration *c, struct usb_function *f)
 	dev->state = STATE_OFFLINE;
 	dev->cdev = NULL;
 	spin_unlock_irq(&dev->lock);
-	mutex_unlock(&dev->read_mutex);
 
 	kfree(f->os_desc_table);
 	f->os_desc_n = 0;
@@ -1843,7 +1838,6 @@ struct usb_function_instance *alloc_inst_mtp_ptp(bool mtp_config)
 	usb_os_desc_prepare_interf_dir(&fi_mtp->func_inst.group, 1,
 					descs, names, THIS_MODULE);
 
-	//mutex_init(&fi_mtp->dev->read_mutex); //Modify by xukai. 20200306
 
 	return  &fi_mtp->func_inst;
 }
