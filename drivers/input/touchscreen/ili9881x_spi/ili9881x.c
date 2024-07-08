@@ -947,7 +947,7 @@ int ili_tddi_init(void)
 	ili9881x_ts->boot = true;
 #endif
 
-	ili9881x_ts->ws = wakeup_source_register("ili_wakelock");
+	ili9881x_ts->ws = wakeup_source_register(NULL, "ili_wakelock");
 	if (!ili9881x_ts->ws)
 		ILI_ERR("wakeup source request failed\n");
 	
