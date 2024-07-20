@@ -2321,7 +2321,6 @@ CONFIG_DIAG_CHAR=y
 CONFIG_DIAG_OVER_USB=y
 # CONFIG_MSM_FASTCVPD is not set
 CONFIG_MSM_ADSPRPC=y
-CONFIG_MSM_RDBG=m
 CONFIG_RANDOM_TRUST_BOOTLOADER=y
 
 #
@@ -3159,40 +3158,6 @@ CONFIG_MSM_SDE_ROTATOR=y
 CONFIG_MSM_SDE_ROTATOR_EVTLOG_DEBUG=y
 # CONFIG_MSM_NPU is not set
 # CONFIG_MSM_NPU_V2 is not set
-CONFIG_DVB_MPQ=m
-
-#
-# Qualcomm Technologies, Inc. Demux device config
-#
-CONFIG_DVB_MPQ_DEMUX=m
-CONFIG_DVB_MPQ_NUM_DMX_DEVICES=4
-CONFIG_DVB_MPQ_SW=y
-# CONFIG_TSPP is not set
-# CONFIG_V4L_MEM2MEM_DRIVERS is not set
-# CONFIG_V4L_TEST_DRIVERS is not set
-# CONFIG_DVB_PLATFORM_DRIVERS is not set
-
-#
-# Qualcomm Technologies, Inc. MSM Camera And Video
-#
-
-#
-# Qualcomm Technologies, Inc. Demux device config
-#
-
-#
-# Qualcomm Technologies, Inc. MSM Camera And Video
-#
-
-#
-# Qualcomm Technologies, Inc. Demux device config
-#
-
-#
-# Supported MMC/SDIO adapters
-#
-# CONFIG_SMS_SDIO_DRV is not set
-# CONFIG_CYPRESS_FIRMWARE is not set
 
 #
 # Media ancillary drivers (tuners, sensors, i2c, spi, frontends)
@@ -3200,50 +3165,6 @@ CONFIG_DVB_MPQ_SW=y
 CONFIG_MEDIA_SUBDRV_AUTOSELECT=y
 CONFIG_MEDIA_ATTACH=y
 CONFIG_VIDEO_IR_I2C=y
-
-#
-# Audio decoders, processors and mixers
-#
-
-#
-# RDS decoders
-#
-
-#
-# Video decoders
-#
-
-#
-# Video and audio decoders
-#
-
-#
-# Video encoders
-#
-
-#
-# Camera sensor devices
-#
-
-#
-# Flash devices
-#
-
-#
-# Video improvement chips
-#
-
-#
-# Audio/Video compression chips
-#
-
-#
-# SDR tuner chips
-#
-
-#
-# Miscellaneous helper chips
-#
 
 #
 # Sensors used on soc_camera driver
@@ -3259,53 +3180,6 @@ CONFIG_MEDIA_TUNER_XC2028=y
 CONFIG_MEDIA_TUNER_XC5000=y
 CONFIG_MEDIA_TUNER_XC4000=y
 CONFIG_MEDIA_TUNER_MC44S803=y
-
-#
-# Multistandard (satellite) frontends
-#
-
-#
-# Multistandard (cable + terrestrial) frontends
-#
-
-#
-# DVB-S (satellite) frontends
-#
-
-#
-# DVB-T (terrestrial) frontends
-#
-# CONFIG_DVB_AS102_FE is not set
-# CONFIG_DVB_GP8PSK_FE is not set
-
-#
-# DVB-C (cable) frontends
-#
-
-#
-# ATSC (North American/Korean Terrestrial/Cable DTV) frontends
-#
-
-#
-# ISDB-T (terrestrial) frontends
-#
-
-#
-# ISDB-S (satellite) & ISDB-T (terrestrial) frontends
-#
-
-#
-# Digital terrestrial only tuners/PLL
-#
-
-#
-# SEC control devices for DVB-S
-#
-
-#
-# Tools to develop new frontends
-#
-# CONFIG_DVB_DUMMY_FE is not set
 
 #
 # Graphics support
@@ -3505,10 +3379,6 @@ CONFIG_BACKLIGHT_QCOM_SPMI_WLED=y
 # CONFIG_VGASTATE is not set
 CONFIG_VIDEOMODE_HELPERS=y
 CONFIG_HDMI=y
-CONFIG_LOGO=y
-# CONFIG_LOGO_LINUX_MONO is not set
-# CONFIG_LOGO_LINUX_VGA16 is not set
-CONFIG_LOGO_LINUX_CLUT224=y
 CONFIG_SOUND=y
 # CONFIG_SOUND_OSS_CORE is not set
 CONFIG_SND=y
@@ -5247,7 +5117,7 @@ CONFIG_DAX=y
 CONFIG_NVMEM=y
 CONFIG_QCOM_QFPROM=y
 CONFIG_NVMEM_SPMI_SDAM=y
-# CONFIG_STM is not set
+CONFIG_STM=y
 # CONFIG_INTEL_TH is not set
 # CONFIG_FPGA is not set
 
@@ -5700,7 +5570,6 @@ CONFIG_ARCH_HAS_DEVMEM_IS_ALLOWED=y
 CONFIG_DEBUG_ALIGN_RODATA=y
 # CONFIG_ARM64_RELOC_TEST is not set
 # CONFIG_ARM64_STRICT_BREAK_BEFORE_MAKE is not set
-# CONFIG_CORESIGHT is not set
 
 #
 # Security options
