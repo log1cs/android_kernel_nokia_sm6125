@@ -65,6 +65,8 @@ static void scm_disable_sdi(void);
  * There is no API from TZ to re-enable the registers.
  * So the SDI cannot be re-enabled when it already by-passed.
  */
+static int in_panic;
+
 /*Modified by qinfeng for vts && dump for pr1.0 NHK_M528_A01-31*/
 static int download_mode = 0;
 /*NHK_M528_A01-31 end*/
@@ -77,7 +79,6 @@ static bool force_warm_reboot;
 #define KASLR_OFFSET_PROP "qcom,msm-imem-kaslr_offset"
 #endif
 
-static int in_panic;
 static struct kobject dload_kobj;
 static int dload_type = SCM_DLOAD_FULLDUMP;
 static void *dload_mode_addr;
@@ -108,10 +109,10 @@ module_param_call(download_mode, dload_set, param_get_int,
 			&download_mode, 0644);
 
 static int panic_prep_restart(struct notifier_block *this,
-			      unsigned long event, void *ptr)
+                              unsigned long event, void *ptr)
 {
-	in_panic = 1;
-	return NOTIFY_DONE;
+        in_panic = 1;
+        return NOTIFY_DONE;
 }
 
 static struct notifier_block panic_blk = {
@@ -291,13 +292,12 @@ static void msm_restart_prepare(const char *cmd)
 {
 	bool need_warm_reset = false;
 #ifdef CONFIG_QCOM_DLOAD_MODE
-	/* Write download mode flags if we're panic'ing
-	 * Write download mode flags if restart_mode says so
+      	/* Write download mode flags if restart_mode says so
 	 * Kill download mode if master-kill switch is set
 	 */
 	if (!is_kdump_kernel())
 		set_dload_mode(download_mode &&
-			(in_panic || restart_mode == RESTART_DLOAD));
+			(restart_mode == RESTART_DLOAD));
 #endif
 
 	if (qpnp_pon_check_hard_reset_stored()) {
@@ -319,6 +319,14 @@ static void msm_restart_prepare(const char *cmd)
 		qpnp_pon_system_pwr_off(PON_POWER_OFF_WARM_RESET);
 	else
 		qpnp_pon_system_pwr_off(PON_POWER_OFF_HARD_RESET);
+
+	if (in_panic) {
+		// Reboot to recovery
+		qpnp_pon_set_restart_reason(
+			PON_RESTART_REASON_RECOVERY);
+		__raw_writel(0x77665502, restart_reason);
+		goto finish_set_restart_reason;
+	}
 
 	if (cmd != NULL) {
 		if (!strncmp(cmd, "bootloader", 10)) {
@@ -366,6 +374,7 @@ static void msm_restart_prepare(const char *cmd)
 		}
 	}
 
+finish_set_restart_reason:
 	flush_cache_all();
 
 	/*outer_flush_all is not supported by 64bit kernel*/
