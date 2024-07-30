@@ -5121,10 +5121,10 @@ static int msm_int_audrx_init(struct snd_soc_pcm_runtime *rtd)
 				card_aux_list) {
 			if (!strcmp(aux_comp->name, WSA8810_NAME_1) ||
 			    !strcmp(aux_comp->name, WSA8810_NAME_2)) {
-				wsa_macro_set_spkr_mode(rtd->codec,
-							WSA_MACRO_SPKR_MODE_1);
-				wsa_macro_set_spkr_gain_offset(rtd->codec,
-						WSA_MACRO_GAIN_OFFSET_M1P5_DB);
+//				wsa_macro_set_spkr_mode(rtd->codec,
+//							WSA_MACRO_SPKR_MODE_1);
+//				wsa_macro_set_spkr_gain_offset(rtd->codec,
+//						WSA_MACRO_GAIN_OFFSET_M1P5_DB);
 				break;
 			}
 		}
@@ -8498,14 +8498,14 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev)
 
 static int msm_wsa881x_init(struct snd_soc_component *component)
 {
-	u8 spkleft_ports[WSA881X_MAX_SWR_PORTS] = {0, 1, 2, 3};
-	u8 spkright_ports[WSA881X_MAX_SWR_PORTS] = {0, 1, 2, 3};
-	u8 spkleft_port_types[WSA881X_MAX_SWR_PORTS] = {SPKR_L, SPKR_L_COMP,
-						SPKR_L_BOOST, SPKR_L_VI};
-	u8 spkright_port_types[WSA881X_MAX_SWR_PORTS] = {SPKR_R, SPKR_R_COMP,
-						SPKR_R_BOOST, SPKR_R_VI};
-	unsigned int ch_rate[WSA881X_MAX_SWR_PORTS] = {2400, 600, 300, 1200};
-	unsigned int ch_mask[WSA881X_MAX_SWR_PORTS] = {0x1, 0xF, 0x3, 0x3};
+//	u8 spkleft_ports[WSA881X_MAX_SWR_PORTS] = {0, 1, 2, 3};
+//	u8 spkright_ports[WSA881X_MAX_SWR_PORTS] = {0, 1, 2, 3};
+//	u8 spkleft_port_types[WSA881X_MAX_SWR_PORTS] = {SPKR_L, SPKR_L_COMP,
+//						SPKR_L_BOOST, SPKR_L_VI};
+//	u8 spkright_port_types[WSA881X_MAX_SWR_PORTS] = {SPKR_R, SPKR_R_COMP,
+//						SPKR_R_BOOST, SPKR_R_VI};
+//	unsigned int ch_rate[WSA881X_MAX_SWR_PORTS] = {2400, 600, 300, 1200};
+//	unsigned int ch_mask[WSA881X_MAX_SWR_PORTS] = {0x1, 0xF, 0x3, 0x3};
 	struct snd_soc_codec *codec = snd_soc_component_to_codec(component);
 	struct msm_asoc_mach_data *pdata;
 	struct snd_soc_dapm_context *dapm;
@@ -8523,9 +8523,9 @@ static int msm_wsa881x_init(struct snd_soc_component *component)
 	if (!strcmp(component->name_prefix, "SpkrLeft")) {
 		dev_dbg(codec->dev, "%s: setting left ch map to codec %s\n",
 			__func__, codec->component.name);
-		wsa881x_set_channel_map(codec, &spkleft_ports[0],
-				WSA881X_MAX_SWR_PORTS, &ch_mask[0],
-				&ch_rate[0], &spkleft_port_types[0]);
+//		wsa881x_set_channel_map(codec, &spkleft_ports[0],
+//				WSA881X_MAX_SWR_PORTS, &ch_mask[0],
+//				&ch_rate[0], &spkleft_port_types[0]);
 		if (dapm->component) {
 			snd_soc_dapm_ignore_suspend(dapm, "SpkrLeft IN");
 			snd_soc_dapm_ignore_suspend(dapm, "SpkrLeft SPKR");
@@ -8533,9 +8533,9 @@ static int msm_wsa881x_init(struct snd_soc_component *component)
 	} else if (!strcmp(component->name_prefix, "SpkrRight")) {
 		dev_dbg(codec->dev, "%s: setting right ch map to codec %s\n",
 			__func__, codec->component.name);
-		wsa881x_set_channel_map(codec, &spkright_ports[0],
-				WSA881X_MAX_SWR_PORTS, &ch_mask[0],
-				&ch_rate[0], &spkright_port_types[0]);
+//		wsa881x_set_channel_map(codec, &spkright_ports[0],
+//				WSA881X_MAX_SWR_PORTS, &ch_mask[0],
+//				&ch_rate[0], &spkright_port_types[0]);
 		if (dapm->component) {
 			snd_soc_dapm_ignore_suspend(dapm, "SpkrRight IN");
 			snd_soc_dapm_ignore_suspend(dapm, "SpkrRight SPKR");
@@ -8558,8 +8558,8 @@ static int msm_wsa881x_init(struct snd_soc_component *component)
 		}
 		pdata->codec_root = entry;
 	}
-	wsa881x_codec_info_create_codec_entry(pdata->codec_root,
-					      codec);
+//	wsa881x_codec_info_create_codec_entry(pdata->codec_root,
+//					      codec);
 err:
 	return ret;
 }
